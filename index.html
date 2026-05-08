@@ -29,6 +29,8 @@
             --text-muted: #64748b;
             --live: #ef4444;
             --success: #10b981;
+            --skeleton-base: rgba(255, 255, 255, 0.06);
+            --skeleton-shine: rgba(255, 255, 255, 0.13);
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -738,9 +740,178 @@
         body {
             scrollbar-width: none;
         }
+
+        /* --- SKELETON LOADER STYLES --- */
+        .skeleton-wrapper {
+            display: none;
+        }
+        .skeleton-wrapper.active {
+            display: block;
+        }
+        .skeleton-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+        .skeleton-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            animation: shimmer 1.8s infinite ease-in-out;
+        }
+        .skeleton-thumb {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--skeleton-base);
+            position: relative;
+            overflow: hidden;
+        }
+        .skeleton-thumb::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 150%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+            animation: shimmerSlide 1.8s infinite ease-in-out;
+        }
+        .skeleton-body {
+            padding: 12px;
+        }
+        .skeleton-title {
+            height: 14px;
+            background: var(--skeleton-base);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .skeleton-title::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 150%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+            animation: shimmerSlide 1.8s infinite ease-in-out;
+        }
+        .skeleton-title:nth-child(1) {
+            width: 80%;
+        }
+        .skeleton-title:nth-child(2) {
+            width: 55%;
+        }
+        .skeleton-badge {
+            width: 60px;
+            height: 18px;
+            background: var(--skeleton-base);
+            border-radius: 10px;
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .skeleton-badge::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 150%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+            animation: shimmerSlide 1.8s infinite ease-in-out;
+        }
+        .skeleton-featured {
+            width: 100%;
+            height: 200px;
+            background: var(--skeleton-base);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .skeleton-featured::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 150%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+            animation: shimmerSlide 1.8s infinite ease-in-out;
+        }
+
+        @keyframes shimmerSlide {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(200%);
+            }
+        }
+        @keyframes shimmer {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* --- OFFLINE BANNER --- */
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            background: #dc2626;
+            color: white;
+            text-align: center;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 14px;
+            transform: translateY(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .offline-banner.visible {
+            transform: translateY(0);
+        }
+        .offline-banner svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            flex-shrink: 0;
+        }
+        .offline-banner span {
+            flex: 1;
+        }
+        /* push header down when banner visible */
+        .header.offline-shift {
+            margin-top: 48px;
+        }
+
+        .content-hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
+    <!-- OFFLINE BANNER -->
+    <div class="offline-banner" id="offlineBanner">
+        <svg viewBox="0 0 24 24"><path d="M1 1l22 22M16.72 16.72a10 10 0 0 1-13.9-13.9M12 2a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10"/></svg>
+        <span>You are offline. Please check your internet connection.</span>
+    </div>
+
     <div class="app-loader" id="appLoader">
         <div class="loader-brand">StreamLive</div>
         <div class="loader-dots"><span></span><span></span><span></span></div>
@@ -749,13 +920,14 @@
     <div class="bg-orb"></div>
 
     <div id="homeScreen">
-        <header class="header">
+        <header class="header" id="mainHeader">
             <div class="header-content">
                 <div class="brand"><div class="brand-icon">S</div><div class="brand-text">StreamLive</div></div>
                 <div class="live-pulse"><div class="pulse-dot"></div><span>LIVE</span></div>
             </div>
         </header>
         <div class="container">
+            <!-- Featured Section -->
             <div class="featured-section" id="featuredSection" style="display: none;">
                 <div class="section-label">Featured Streams</div>
                 <div class="slider-container">
@@ -763,12 +935,40 @@
                 </div>
                 <div class="slider-dots" id="sliderDots"></div>
             </div>
+
+            <!-- Skeleton: Featured -->
+            <div class="featured-section skeleton-wrapper" id="skeletonFeatured">
+                <div class="section-label">Featured Streams</div>
+                <div class="skeleton-featured"></div>
+            </div>
+
+            <!-- Tabs -->
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('live')" id="tab-live">Live Now <span class="tab-badge" id="count-live">0</span></button>
                 <button class="tab" onclick="switchTab('upcoming')" id="tab-upcoming">Upcoming <span class="tab-badge" id="count-upcoming">0</span></button>
             </div>
+
+            <!-- Live Grid -->
             <div class="streams-grid" id="liveGrid"></div>
+            <!-- Skeleton: Live Grid -->
+            <div class="skeleton-wrapper active" id="skeletonLive">
+                <div class="skeleton-grid">
+                    <div class="skeleton-card"><div class="skeleton-thumb"></div><div class="skeleton-body"><div class="skeleton-title"></div><div class="skeleton-title"></div><div class="skeleton-badge"></div></div></div>
+                    <div class="skeleton-card"><div class="skeleton-thumb"></div><div class="skeleton-body"><div class="skeleton-title"></div><div class="skeleton-title"></div><div class="skeleton-badge"></div></div></div>
+                    <div class="skeleton-card"><div class="skeleton-thumb"></div><div class="skeleton-body"><div class="skeleton-title"></div><div class="skeleton-title"></div><div class="skeleton-badge"></div></div></div>
+                    <div class="skeleton-card"><div class="skeleton-thumb"></div><div class="skeleton-body"><div class="skeleton-title"></div><div class="skeleton-title"></div><div class="skeleton-badge"></div></div></div>
+                </div>
+            </div>
+
+            <!-- Upcoming Grid -->
             <div class="streams-grid hidden-section" id="upcomingGrid"></div>
+            <!-- Skeleton: Upcoming Grid -->
+            <div class="skeleton-wrapper hidden-section" id="skeletonUpcoming">
+                <div class="skeleton-grid">
+                    <div class="skeleton-card"><div class="skeleton-thumb"></div><div class="skeleton-body"><div class="skeleton-title"></div><div class="skeleton-title"></div><div class="skeleton-badge"></div></div></div>
+                    <div class="skeleton-card"><div class="skeleton-thumb"></div><div class="skeleton-body"><div class="skeleton-title"></div><div class="skeleton-title"></div><div class="skeleton-badge"></div></div></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -844,7 +1044,7 @@
         const db = firebase.database();
         const streamsRef = db.ref('streams');
 
-        let allStreams = []; // array of {id, thumbnail, name, m3u8Url, scheduleTime, featured}
+        let allStreams = [];
         let currentHls = null,
             controlsTimeout = null,
             sliderInterval = null,
@@ -854,6 +1054,21 @@
             upcomingTimerInterval = null,
             controlsVisible = true;
         let pendingUpcomingId = null;
+        let dataLoaded = false; // tracks if Firebase data has been received
+
+        // ---- OFFLINE DETECTION ----
+        const offlineBanner = document.getElementById('offlineBanner');
+        const mainHeader = document.getElementById('mainHeader');
+
+        function updateOfflineBanner() {
+            const isOffline = !navigator.onLine;
+            offlineBanner.classList.toggle('visible', isOffline);
+            mainHeader.classList.toggle('offline-shift', isOffline);
+        }
+        window.addEventListener('online', updateOfflineBanner);
+        window.addEventListener('offline', updateOfflineBanner);
+        // initial check
+        updateOfflineBanner();
 
         function isLive(stream) { return new Date() >= new Date(stream.scheduleTime); }
 
@@ -865,6 +1080,32 @@
                 minutes = Math.floor((total % 3600000) / 60000),
                 seconds = Math.floor((total % 60000) / 1000);
             return { days, hours, minutes, seconds, total };
+        }
+
+        // ---- SKELETON HELPERS ----
+        function showSkeletons(show) {
+            const skFeat = document.getElementById('skeletonFeatured');
+            const skLive = document.getElementById('skeletonLive');
+            const skUpcoming = document.getElementById('skeletonUpcoming');
+            if (show) {
+                skFeat.classList.add('active');
+                skLive.classList.add('active');
+                // upcoming skeleton visible only if upcoming tab is active
+                const upcomingTab = document.getElementById('tab-upcoming');
+                if (upcomingTab.classList.contains('active')) {
+                    skUpcoming.classList.remove('hidden-section');
+                } else {
+                    skUpcoming.classList.add('hidden-section');
+                }
+                // hide real content
+                document.getElementById('featuredSection').style.display = 'none';
+                document.getElementById('liveGrid').innerHTML = '';
+                document.getElementById('upcomingGrid').innerHTML = '';
+            } else {
+                skFeat.classList.remove('active');
+                skLive.classList.remove('active');
+                skUpcoming.classList.add('hidden-section');
+            }
         }
 
         // ---- RENDER UI FROM allStreams ----
@@ -887,10 +1128,12 @@
                             </div>
                         </div>`;
             }).join('');
-            dots.innerHTML = featured.map((_, i) => `<div class="dot ${i===0?'active':''}" onclick="goToSlide(${i})"></div>`).join('');
+            dots.innerHTML = featured.map((_, i) => `<div class="dot ${i===0?'active':''}" onclick="goToSlide(${i})"></div>`).join(
+            '');
             if (sliderInterval) clearInterval(sliderInterval);
             currentSlide = 0;
-            if (featured.length > 1) sliderInterval = setInterval(() => { currentSlide = (currentSlide + 1) % featured.length;
+            if (featured.length > 1) sliderInterval = setInterval(() => { currentSlide = (currentSlide + 1) % featured
+                    .length;
                 updateSlider(); }, 4000);
         }
 
@@ -959,6 +1202,13 @@
             document.getElementById('tab-' + tab).classList.add('active');
             document.getElementById('liveGrid').classList.toggle('hidden-section', tab !== 'live');
             document.getElementById('upcomingGrid').classList.toggle('hidden-section', tab !== 'upcoming');
+            // skeletons: show upcoming skeleton if needed
+            const skUpcoming = document.getElementById('skeletonUpcoming');
+            if (!dataLoaded) {
+                skUpcoming.classList.toggle('hidden-section', tab !== 'upcoming');
+            } else {
+                skUpcoming.classList.add('hidden-section');
+            }
         }
 
         // ---- Player functions ----
@@ -1107,7 +1357,7 @@
             document.body.style.overflow = '';
         }
 
-        // ---- controls with fixed auto-hide ----
+        // ---- controls ----
         function showControls() {
             const bar = document.getElementById('controlsBar');
             bar.classList.remove('hidden');
@@ -1179,8 +1429,16 @@
                 newStreams.push({ id: child.key, ...child.val() });
             });
             allStreams = newStreams;
+
+            // hide skeletons and show real content
+            if (!dataLoaded) {
+                dataLoaded = true;
+                showSkeletons(false);
+            }
+
             renderFeatured();
             renderStreams();
+
             if (currentStreamId) {
                 const stillExists = allStreams.find(s => s.id === currentStreamId);
                 if (!stillExists || !isLive(stillExists)) {
@@ -1198,8 +1456,11 @@
             }
         });
 
+        // ---- initial load: show skeletons ----
         window.onload = () => {
             initGlobalPlayerControls();
+            // show skeletons immediately
+            showSkeletons(true);
             setTimeout(() => document.getElementById('appLoader').classList.add('hidden'), 1500);
         };
         window.switchTab = switchTab;
